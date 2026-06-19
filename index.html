@@ -105,6 +105,11 @@
             transform: translateY(-1px) scale(0.98);
         }
 
+        .btn-liquid:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
         .btn-accent {
             background: linear-gradient(135deg, rgba(255, 117, 151, 0.2), rgba(181, 123, 238, 0.2));
             border: 1px solid rgba(255, 117, 151, 0.4);
@@ -199,9 +204,11 @@
             gap: 15px;
             border: 1px dashed var(--glass-border);
             cursor: pointer;
+            transition: all 0.3s;
         }
         .room-code-box:hover {
-            background: rgba(255,255,255,0.02);
+            background: rgba(255,255,255,0.04);
+            border-color: var(--accent-pink);
         }
 
         .player-list {
@@ -386,16 +393,14 @@
 </head>
 <body>
 
-    <!-- Навигационная панель -->
     <div class="top-nav">
         <div class="nickname-container">
-            <span style="font-size: 13px; color: var(--text-muted)">ID:</span>
+            <span style="font-size: 13px; color: var(--text-muted)">Ник:</span>
             <input type="text" id="topNickInput" class="nickname-input-top" value="Игрок">
         </div>
         <button id="btnGoMenu" class="btn-liquid" style="display: none; padding: 8px 20px; border-radius: 50px;">В меню</button>
     </div>
 
-    <!-- 1. Главное Меню -->
     <div id="screenMain" class="glass-panel active">
         <h1 class="main-title">казик ивотских</h1>
         <div class="menu-buttons">
@@ -404,27 +409,23 @@
         </div>
     </div>
 
-    <!-- 2. Экран Подключения -->
     <div id="screenJoin" class="glass-panel">
         <h2 style="margin-bottom: 24px;">Подключение</h2>
         <input type="text" id="joinCodeInput" class="glass-input" placeholder="Введите код комнаты (XXXX_1234)" style="margin-bottom: 20px; text-transform: uppercase;">
         <div style="display: flex; gap: 12px;">
             <button onclick="switchScreen('screenMain')" class="btn-liquid" style="flex: 1;">Назад</button>
-            <button onclick="joinRoom()" class="btn-liquid btn-accent" style="flex: 1;">Войти</button>
+            <button onclick="joinRoom()" id="submitJoinBtn" class="btn-liquid btn-accent" style="flex: 1;">Войти</button>
         </div>
     </div>
 
-    <!-- 3. Экран Лобби -->
     <div id="screenLobby" class="glass-panel">
         <h2>Ожидание игроков</h2>
         <div class="room-code-box" id="lobbyCodeDisplay" onclick="copyCode()">
             <span>КОД</span>
-            <span style="font-size: 14px; color: var(--text-muted)">(нажми для копирования)</span>
         </div>
         
         <div class="player-list" id="lobbyPlayerList">
-            <!-- Сюда рендерятся игроки -->
-        </div>
+            </div>
 
         <div id="hostControls" style="display: none; margin-top: 25px;">
             <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 14px;">Выберите режим игры:</p>
@@ -439,7 +440,6 @@
         </div>
     </div>
 
-    <!-- 4. Экран игры: Колесо Фортуны -->
     <div id="screenWheel" class="glass-panel game-layout">
         <div class="wheel-title-display" id="wheelTitleText">Колесо Фортуны</div>
         
@@ -459,7 +459,6 @@
         </div>
     </div>
 
-    <!-- 5. Экран игры: Казино Дуэль -->
     <div id="screenCasino" class="glass-panel game-layout">
         <h2 style="margin-bottom: 10px;">Казино Дуэль</h2>
         <div class="balance-card">Баланс: <span id="balanceDisplay">1000</span> $</div>
@@ -483,16 +482,15 @@
         </div>
     </div>
 
-    <!-- Тост-уведомления -->
     <div id="toast" class="toast">Уведомление</div>
 
     <script>
-        // Инициализация сети синхронизации через BroadcastChannel
         const network = new BroadcastChannel('kazik_ivotskih_channel');
         
-        let myId = 'ID_' + Math.floor(Math.random() * 10000);
+        let myId = 'ID_' + Math.floor(Math.random() * 100000);
         let myNick = localStorage.getItem('kazik_nick') || 'Игрок_' + Math.floor(Math.random() * 100);
         let myBalance = 1000;
+        let isConnecting = false;
         
         let room = {
             code: null,
@@ -500,7 +498,7 @@
             hostNick: '',
             guestId: null,
             guestNick: '',
-            state: 'menu', // menu, lobby, wheel, casino
+            state: 'menu', 
             selectedMode: 'wheel',
             wheelTitle: 'Кто моет посуду?',
             opt1: 'Ты',
@@ -511,13 +509,11 @@
             guestReady: false
         };
 
-        // Настройка физики колеса
         let wheelAngle = 0;
         let wheelVelocity = 0;
         const friction = 0.985;
         let isSpinning = false;
 
-        // Элементы UI
         document.getElementById('topNickInput').value = myNick;
         document.getElementById('topNickInput').addEventListener('input', (e) => {
             myNick = e.target.value;
@@ -533,11 +529,11 @@
             leaveRoom();
         });
 
-        // Сетевые сообщения
         network.onmessage = (event) => {
             const msg = event.data;
             
-            if (msg.type === 'JOIN_REQ' && room.code && myId === room.hostId) {
+            // Хост получает запрос от гостя
+            if (msg.type === 'JOIN_REQ' && room.code && msg.code === room.code && myId === room.hostId) {
                 if (!room.guestId) {
                     room.guestId = msg.senderId;
                     room.guestNick = msg.senderNick;
@@ -546,21 +542,29 @@
                 }
             }
             
+            // Синхронизация состояния для обоих игроков
             if (msg.type === 'SYNC' && room.code && msg.code === room.code) {
                 if (myId !== msg.senderId) {
-                    // Принимаем изменения от другого участника
                     const oldState = room.state;
+                    
+                    // Если гость успешно поймал пакет от хоста — отменяем статус загрузки
+                    if (isConnecting && msg.roomState.hostId) {
+                        isConnecting = false;
+                        const btn = document.getElementById('submitJoinBtn');
+                        btn.innerText = "Войти";
+                        btn.disabled = false;
+                    }
+
                     room = msg.roomState;
                     updateUI();
                     
-                    if(oldState !== room.state) {
+                    if(oldState !== room.state || document.getElementById('screenJoin').classList.contains('active')) {
                         applyScreenChange(room.state);
                     }
                 }
             }
 
             if (msg.type === 'SPIN_IMPULSE' && room.code && msg.code === room.code) {
-                // Добавляем скорость от чужого клика для реалистичного разгона
                 wheelVelocity += 14;
                 if(!isSpinning) processWheelPhysics();
             }
@@ -590,7 +594,6 @@
             updateUI();
         }
 
-        // Переключение экранов
         function switchScreen(screenId) {
             document.querySelectorAll('.glass-panel').forEach(p => p.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
@@ -614,7 +617,6 @@
             }
         }
 
-        // Логика создания комнаты
         function createRoom() {
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             let randLetters = "";
@@ -634,29 +636,44 @@
             showToast("Комната создана!");
         }
 
-        // Подключение
         function joinRoom() {
             const input = document.getElementById('joinCodeInput').value.trim().toUpperCase();
             if(!input) return showToast("Введите код!");
             
             room.code = input;
-            // Отправляем запрос на коннект
-            network.postMessage({
-                type: 'JOIN_REQ',
-                code: input,
-                senderId: myId,
-                senderNick: myNick
-            });
+            isConnecting = true;
+            
+            const btn = document.getElementById('submitJoinBtn');
+            btn.innerText = "Вход...";
+            btn.disabled = true;
 
-            // Ждем ответа через синхронизацию хоста
-            setTimeout(() => {
-                if (room.hostId) {
-                    showToast("Успешно подключено!");
-                } else {
-                    showToast("Комната не найдена или хост оффлайн");
-                    room.code = null;
+            // Отправляем частые сигналы, чтобы пробить энергосбережение браузера у хоста
+            let attempts = 0;
+            const interval = setInterval(() => {
+                if (!isConnecting) {
+                    clearInterval(interval);
+                    return;
                 }
-            }, 800);
+                
+                network.postMessage({
+                    type: 'JOIN_REQ',
+                    code: input,
+                    senderId: myId,
+                    senderNick: myNick
+                });
+
+                attempts++;
+                if (attempts >= 6) { // 3 секунды ожидания общего времени
+                    clearInterval(interval);
+                    if (isConnecting) {
+                        showToast("Комната не найдена или хост оффлайн");
+                        room.code = null;
+                        isConnecting = false;
+                        btn.innerText = "Войти";
+                        btn.disabled = false;
+                    }
+                }
+            }, 500);
         }
 
         function leaveRoom() {
@@ -665,18 +682,15 @@
             switchScreen('screenMain');
         }
 
-        // Обновление интерфейса комнат и лобби
         function updateUI() {
             if (!room.code) return;
 
-            // Отображение кодов и ролей
-            document.getElementById('lobbyCodeDisplay').innerHTML = `<span>${room.code}</span> <span style="font-size:12px;color:var(--text-muted);">(копировать)</span>`;
+            document.getElementById('lobbyCodeDisplay').innerHTML = `<span>${room.code}</span> <span style="font-size:12px;color:var(--text-muted); font-weight:normal; margin-left:10px;">(нажми чтобы скопировать)</span>`;
             
             const isHost = (myId === room.hostId);
             document.getElementById('hostControls').style.display = (isHost && room.guestId) ? 'block' : 'none';
             document.getElementById('guestControls').style.display = (!isHost) ? 'block' : 'none';
 
-            // Список игроков в лобби
             const list = document.getElementById('lobbyPlayerList');
             list.innerHTML = `
                 <div class="player-slot">
@@ -699,22 +713,18 @@
                 `;
             }
 
-            // Синхронизация табов режимов у Хоста
             if(isHost) {
                 document.getElementById(`modeBtn-wheel`).className = room.selectedMode === 'wheel' ? 'btn-liquid btn-accent' : 'btn-liquid';
                 document.getElementById(`modeBtn-casino`).className = room.selectedMode === 'casino' ? 'btn-liquid btn-accent' : 'btn-liquid';
             }
 
-            // Обновление текстов колеса
             document.getElementById('wheelTitleText').innerText = room.wheelTitle;
             if(!isHost) {
-                // Скрываем инпуты для гостя, чтобы интерфейс был чистым
                 document.getElementById('wheelInputsConfig').style.display = 'none';
             } else {
                 document.getElementById('wheelInputsConfig').style.display = 'grid';
             }
 
-            // Казино данные
             document.getElementById('balanceDisplay').innerText = myBalance;
             document.getElementById('casinoHostName').innerText = room.hostNick || "Хост";
             document.getElementById('casinoGuestName').innerText = room.guestNick || "Ожидание...";
@@ -776,7 +786,6 @@
                 ctx.strokeStyle = 'rgba(255,255,255,0.15)';
                 ctx.stroke();
                 
-                // Текст вариантов
                 ctx.save();
                 ctx.translate(center, center);
                 ctx.rotate(angleStart + Math.PI / 2);
@@ -789,10 +798,8 @@
         }
 
         function spinWheelClick() {
-            // Отправляем импульс ускорения по сети
             network.postMessage({ type: 'SPIN_IMPULSE', code: room.code });
-            
-            wheelVelocity += 14; // Наращиваем скорость вращения при многократных кликах
+            wheelVelocity += 14; 
             if (!isSpinning) {
                 processWheelPhysics();
             }
@@ -800,10 +807,9 @@
 
         function processWheelPhysics() {
             isSpinning = true;
-            
             function animate() {
                 if (wheelVelocity > 0.05) {
-                    wheelVelocity *= friction; // Реалистичное замедление по физике трения
+                    wheelVelocity *= friction; 
                     wheelAngle += wheelVelocity * 0.05;
                     drawWheel(wheelAngle);
                     requestAnimationFrame(animate);
@@ -817,13 +823,10 @@
         }
 
         function determineWheelWinner() {
-            // Нормализация угла стрелки (она сверху, т.е. на 4.71 радиан / 270 градусов)
             const normalizedAngle = (wheelAngle + Math.PI * 1.5) % (Math.PI * 2);
-            // Если угол в первой половине окружности, выиграл второй вариант, иначе первый
             const winner = normalizedAngle < Math.PI ? room.opt2 : room.opt1;
             showToast(`Результат: ${winner}`);
         }
-
 
         /* --- МОДУЛЬ: КАЗИНО ДУЭЛЬ --- */
         function resetCasinoUi() {
@@ -859,7 +862,6 @@
 
             syncRoom();
 
-            // Если оба игрока сделали ставки — запускаем бросок
             if (room.hostReady && room.guestReady) {
                 executeCasinoRoll();
             }
@@ -869,11 +871,9 @@
             let ticks = 0;
             const diceIcons = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
             
-            // Генерируем окончательный результат на стороне Хоста для идеальной синхронизации
             let hostResult = Math.floor(Math.random() * 6) + 1;
             let guestResult = Math.floor(Math.random() * 6) + 1;
             
-            // Если мы гость, мы подождем значений хоста через интервал анимации
             if(myId === room.hostId) {
                 room.finalHostRoll = hostResult;
                 room.finalGuestRoll = guestResult;
@@ -881,7 +881,6 @@
             }
 
             const interval = setInterval(() => {
-                // Красивое визуальное кручение костей
                 document.getElementById('casinoHostDice').innerText = diceIcons[Math.floor(Math.random() * 6)];
                 document.getElementById('casinoGuestDice').innerText = diceIcons[Math.floor(Math.random() * 6)];
                 document.getElementById('casinoHostDice').style.transform = `rotate(${ticks * 45}deg)`;
@@ -891,7 +890,6 @@
                 if (ticks > 12) {
                     clearInterval(interval);
                     
-                    // Вывод финальных результатов
                     const resH = room.finalHostRoll || hostResult;
                     const resG = room.finalGuestRoll || guestResult;
                     
@@ -928,7 +926,6 @@
                 }
             }
 
-            // Возврат к началу через 4 секунды
             setTimeout(() => {
                 if(myId === room.hostId) {
                     resetCasinoUi();
@@ -937,7 +934,6 @@
             }, 4000);
         }
 
-        // Вспомогательный UI метод
         function showToast(text) {
             const toast = document.getElementById('toast');
             toast.innerText = text;
