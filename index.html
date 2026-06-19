@@ -371,7 +371,7 @@
                 <canvas id="wheelCanvas" width="320" height="320"></canvas>
             </div>
             <div class="wheel-config" id="wheelInputsConfig">
-                <input type="text" id="inputWheelTitle" class="glass-input" placeholder="Заголовок" value="Кто моет посуду?" oninput="updateWheelConfig()">
+                <input type="text" id="inputWheelTitle" class="glass-input" placeholder="Заголовок" value="Кто ишак?" oninput="updateWheelConfig()">
                 <div></div>
                 <input type="text" id="inputOpt1" class="glass-input" placeholder="Вариант 1" value="Ты" oninput="updateWheelConfig()">
                 <input type="text" id="inputOpt2" class="glass-input" placeholder="Вариант 2" value="Не ты" oninput="updateWheelConfig()">
@@ -426,7 +426,7 @@
         let room = {
             code: null, hostId: null, hostNick: '', guestId: null, guestNick: '',
             state: 'menu', selectedMode: 'wheel',
-            wheelTitle: 'Кто моет посуду?', opt1: 'Ты', opt2: 'Не ты',
+            wheelTitle: 'Кто ишак?', opt1: 'Ты', opt2: 'Не ты',
             hostBet: 0, guestBet: 0, hostReady: false, guestReady: false,
             hostSpinClicked: false, guestSpinClicked: false,
             hostSlots: [0,0,0], guestSlots: [0,0,0]
@@ -699,10 +699,6 @@
             room.opt2 = document.getElementById('inputOpt2').value || 'Вариант 2';
             broadcastState();
             initWheel();
-        }
-
-        function initWheel() { drawWheel(0); }
-
         function drawWheel(currentAngle) {
             const colors = ['#ff7597', '#b57bee'];
             const labels = [room.opt1, room.opt2];
@@ -718,15 +714,21 @@
                 ctx.fillStyle = colors[i]; ctx.fill();
                 ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.stroke();
                 
-                // Идеальный поворот и центровка текста строго посредине цветных секторов
+                // Вычисляем середину текущего сектора для выравнивания
+                const middleAngle = angleStart + Math.PI / 2;
+                
                 ctx.save(); 
                 ctx.translate(center, center); 
-                ctx.rotate(angleStart + Math.PI / 2);
+                // Смещаем текст на медиану и разворачиваем в строго горизонтальное положение (0 градусов)
+                ctx.rotate(middleAngle);
+                ctx.translate(80, 0);
+                ctx.rotate(-middleAngle); 
+                
                 ctx.fillStyle = '#fff'; 
-                ctx.font = 'bold 16px Inter'; 
+                ctx.font = 'bold 18px Inter'; 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(labels[i], 75, 0); 
+                ctx.fillText(labels[i], 0, 0); 
                 ctx.restore();
             }
         }
