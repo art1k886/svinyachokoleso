@@ -262,6 +262,7 @@
         }
         .balance-card span { color: #4ade80; font-weight: 800; }
 
+        /* --- СТИЛИ СЛОТОВ --- */
         .duel-arena { display: flex; justify-content: space-around; width: 100%; margin: 20px 0; gap: 20px; }
         .duel-player-box {
             flex: 1;
@@ -271,14 +272,25 @@
             border: 1px solid rgba(255,255,255,0.05);
             transition: all 0.3s;
         }
-        .duel-player-box.ready { border-color: #4ade80; box-shadow: 0 0 15px rgba(74, 222, 128, 0.15); }
-        .dice-view {
-            font-size: 48px;
-            margin-top: 15px;
-            min-height: 70px;
+        .slots-container {
             display: flex;
             justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            min-height: 70px;
+        }
+        .slot-reel {
+            width: 54px;
+            height: 68px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(20,20,30,0.6) 100%);
+            border: 2px solid var(--glass-border);
+            border-radius: 14px;
+            display: flex;
             align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.05s ease;
         }
 
         .toast {
@@ -340,9 +352,9 @@
             <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 14px;">Выберите режим игры:</p>
             <div class="mode-selector" style="margin-bottom: 20px;">
                 <button onclick="selectMode('wheel')" id="modeBtn-wheel" class="btn-liquid btn-accent" style="padding: 10px 20px;">Колесо Фортуны</button>
-                <button onclick="selectMode('casino')" id="modeBtn-casino" class="btn-liquid" style="padding: 10px 20px;">Казино Дуэль</button>
+                <button onclick="selectMode('casino')" id="modeBtn-casino" class="btn-liquid" style="padding: 10px 20px;">Казино Слоты</button>
             </div>
-            <button onclick="startGame()" class="btn-liquid btn-accent" style="width: 100%;">Запустить игру для двоих</button>
+            <button onclick="startGame()" class="btn-liquid btn-accent" style="width: 100%;">Запустить игру</button>
         </div>
         <div id="guestControls" style="display: none; color: var(--text-muted); margin-top: 20px;">
             Ожидание, пока хост запустит игру...
@@ -367,18 +379,26 @@
     </div>
 
     <div id="screenCasino" class="glass-panel game-layout">
-        <h2 style="margin-bottom: 10px;">Казино Дуэль</h2>
+        <h2 style="margin-bottom: 10px;">Казино Слоты</h2>
         <div class="balance-card">Баланс: <span id="balanceDisplay">1000</span> $</div>
         <div class="duel-arena">
             <div class="duel-player-box" id="casinoHostBox">
                 <div id="casinoHostName" style="font-weight: 700;">Хост</div>
                 <div style="font-size: 13px; color: var(--text-muted); margin-top: 5px;" id="casinoHostBetState">Ставка: 0</div>
-                <div class="dice-view" id="casinoHostDice">🎲</div>
+                <div class="slots-container" id="casinoHostSlots">
+                    <div class="slot-reel">🎰</div>
+                    <div class="slot-reel">🎰</div>
+                    <div class="slot-reel">🎰</div>
+                </div>
             </div>
             <div class="duel-player-box" id="casinoGuestBox">
                 <div id="casinoGuestName" style="font-weight: 700;">Ожидание...</div>
                 <div style="font-size: 13px; color: var(--text-muted); margin-top: 5px;" id="casinoGuestBetState">Ставка: 0</div>
-                <div class="dice-view" id="casinoGuestDice">🎲</div>
+                <div class="slots-container" id="casinoGuestSlots">
+                    <div class="slot-reel">🎰</div>
+                    <div class="slot-reel">🎰</div>
+                    <div class="slot-reel">🎰</div>
+                </div>
             </div>
         </div>
         <div style="max-width: 300px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px;">
@@ -394,8 +414,8 @@
         let myNick = localStorage.getItem('kazik_nick') || 'Игрок_' + Math.floor(Math.random() * 100);
         let myBalance = 1000;
 
-        let peer = null;       // Объект PeerJS
-        let conn = null;       // Активное p2p соединение
+        let peer = null;       
+        let conn = null;       
         let isHost = false;
 
         let room = {
@@ -403,7 +423,7 @@
             state: 'menu', selectedMode: 'wheel',
             wheelTitle: 'Кто моет посуду?', opt1: 'Ты', opt2: 'Не ты',
             hostBet: 0, guestBet: 0, hostReady: false, guestReady: false,
-            finalHostRoll: 0, finalGuestRoll: 0
+            hostSlots: [0,0,0], guestSlots: [0,0,0]
         };
 
         let wheelAngle = 0;
@@ -423,9 +443,27 @@
             }
         });
 
-        document.getElementById('btnGoMenu').addEventListener('click', () => { location.reload(); });
+        document.getElementById('btnGoMenu').addEventListener('click', () => { handleDisconnect(); });
 
-        // Создание комнаты (Хост)
+        // Функция принудительного выброса в главное меню при дисконнекте
+        function handleDisconnect() {
+            showToast("Соединение прервано. Возврат в главное меню...");
+            setTimeout(() => {
+                if (conn) { conn.close(); conn = null; }
+                if (peer) { peer.destroy(); peer = null; }
+                isHost = false;
+                room = {
+                    code: null, hostId: null, hostNick: '', guestId: null, guestNick: '',
+                    state: 'menu', selectedMode: 'wheel',
+                    wheelTitle: 'Кто моет посуду?', opt1: 'Ты', opt2: 'Не ты',
+                    hostBet: 0, guestBet: 0, hostReady: false, guestReady: false,
+                    hostSlots: [0,0,0], guestSlots: [0,0,0]
+                };
+                switchScreen('screenMain');
+                document.getElementById('btnGoMenu').style.display = 'none';
+            }, 1500);
+        }
+
         function createRoom() {
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             let randLetters = "";
@@ -434,8 +472,6 @@
             const code = `${randLetters}_${randNumbers}`;
 
             showToast("Инициализация сети...");
-            
-            // Префикс исключает коллизии на публичном сервере PeerJS
             peer = new Peer('kazikivotskih_' + code);
 
             peer.on('open', () => {
@@ -444,7 +480,6 @@
                 room.hostId = myId;
                 room.hostNick = myNick;
                 room.state = 'lobby';
-                
                 applyScreenChange('lobby');
                 updateUI();
                 showToast("Комната создана!");
@@ -459,13 +494,9 @@
                 setupConnection();
             });
 
-            peer.on('error', (err) => {
-                showToast("Ошибка сети. Попробуйте снова.");
-                console.error(err);
-            });
+            peer.on('error', () => { showToast("Ошибка сети. Попробуйте снова."); });
         }
 
-        // Подключение к комнате (Гость)
         function joinRoom() {
             const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
             if (!code) return showToast("Введите код!");
@@ -475,12 +506,10 @@
             btn.disabled = true;
 
             peer = new Peer();
-
             peer.on('open', () => {
                 conn = peer.connect('kazikivotskih_' + code);
-                
                 let timeout = setTimeout(() => {
-                    showToast("Комната не найдена или хост оффлайн");
+                    showToast("Комната не найдена");
                     btn.innerText = "Войти";
                     btn.disabled = false;
                 }, 5000);
@@ -497,7 +526,6 @@
         function setupConnection() {
             conn.on('data', (data) => {
                 if (isHost) {
-                    // Обработка запросов от Гостя на Хосте
                     if (data.type === 'JOIN_REQ') {
                         room.guestId = data.senderId;
                         room.guestNick = data.senderNick;
@@ -509,9 +537,11 @@
                         broadcastState();
                     }
                     if (data.type === 'SPIN_CLIK') {
-                        wheelVelocity += 14;
-                        broadcastState();
-                        if (!isSpinning) processWheelPhysics();
+                        if (!isSpinning) {
+                            let force = 12 + Math.random() * 8;
+                            sendToPeer({ type: 'WHEEL_SPIN_EVENT', vel: force });
+                            processWheelPhysics(force);
+                        }
                     }
                     if (data.type === 'GUEST_BET') {
                         room.guestBet = data.bet;
@@ -520,7 +550,6 @@
                         if (room.hostReady && room.guestReady) executeCasinoRoll();
                     }
                 } else {
-                    // Обработка ответов от Хоста на Госте
                     if (data.type === 'SYNC') {
                         const oldState = room.state;
                         room = data.roomState;
@@ -528,11 +557,10 @@
                         if (oldState !== room.state) applyScreenChange(room.state);
                     }
                     if (data.type === 'WHEEL_SPIN_EVENT') {
-                        wheelVelocity = data.vel;
-                        if (!isSpinning) processWheelPhysics();
+                        processWheelPhysics(data.vel);
                     }
-                    if (data.type === 'DICE_ANIMATE') {
-                        animateDiceLocal(data.hRoll, data.gRoll);
+                    if (data.type === 'SLOTS_ANIMATE') {
+                        animateSlotsLocal(data.hSlots, data.gSlots);
                     }
                     if (data.type === 'ROOM_FULL') {
                         showToast("Комната уже заполнена!");
@@ -541,10 +569,9 @@
                 }
             });
 
-            conn.on('close', () => {
-                showToast("Соединение разорвано");
-                setTimeout(() => location.reload(), 2000);
-            });
+            // Любое закрытие канала связи возвращает обоих в меню
+            conn.on('close', handleDisconnect);
+            conn.on('error', handleDisconnect);
         }
 
         function broadcastState() {
@@ -571,8 +598,7 @@
 
         function updateUI() {
             if (!room.code) return;
-            document.getElementById('lobbyCodeDisplay').innerHTML = `<span>${room.code}</span> <span style="font-size:12px;color:var(--text-muted);font-weight:normal;margin-left:10px;">(нажми для копирования)</span>`;
-            
+            document.getElementById('lobbyCodeDisplay').innerHTML = `<span>${room.code}</span>`;
             document.getElementById('hostControls').style.display = (isHost && room.guestId) ? 'block' : 'none';
             document.getElementById('guestControls').style.display = (!isHost) ? 'block' : 'none';
 
@@ -608,7 +634,7 @@
         function selectMode(mode) { room.selectedMode = mode; broadcastState(); }
         function startGame() { room.state = room.selectedMode; broadcastState(); applyScreenChange(room.state); }
 
-        /* --- КОЛЕСО ФОРТУНЫ --- */
+        /* --- УЛУЧШЕННОЕ КОЛЕСО ФОРТУНЫ --- */
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -631,29 +657,41 @@
             for (let i = 0; i < 2; i++) {
                 const angleStart = currentAngle + (i * Math.PI);
                 const angleEnd = currentAngle + ((i + 1) * Math.PI);
+                
                 ctx.beginPath(); ctx.moveTo(center, center);
                 ctx.arc(center, center, 150, angleStart, angleEnd);
                 ctx.fillStyle = colors[i]; ctx.fill();
                 ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.stroke();
                 
-                ctx.save(); ctx.translate(center, center); ctx.rotate(angleStart + Math.PI / 2);
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Inter'; ctx.textAlign = 'center';
-                ctx.fillText(labels[i], 0, -80); ctx.restore();
+                // Идеальный поворот и центровка текста внутри полей
+                ctx.save(); 
+                ctx.translate(center, center); 
+                ctx.rotate(angleStart + Math.PI / 2);
+                ctx.fillStyle = '#fff'; 
+                ctx.font = 'bold 16px Inter'; 
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(labels[i], 0, -75); 
+                ctx.restore();
             }
         }
 
         function spinWheelClick() {
+            if (isSpinning) return;
             if (isHost) {
-                wheelVelocity += 14;
-                sendToPeer({ type: 'WHEEL_SPIN_EVENT', vel: wheelVelocity });
-                if (!isSpinning) processWheelPhysics();
+                let force = 12 + Math.random() * 8; // Случайный одинаковый толчок
+                sendToPeer({ type: 'WHEEL_SPIN_EVENT', vel: force });
+                processWheelPhysics(force);
             } else {
                 sendToPeer({ type: 'SPIN_CLIK' });
             }
         }
 
-        function processWheelPhysics() {
+        function processWheelPhysics(initialVel) {
+            wheelAngle = 0; // Начинаем с 0 для идеального совпадения координат
+            wheelVelocity = initialVel;
             isSpinning = true;
+            
             function animate() {
                 if (wheelVelocity > 0.05) {
                     wheelVelocity *= friction;
@@ -669,15 +707,21 @@
         }
 
         function determineWheelWinner() {
-            const normalizedAngle = (wheelAngle + Math.PI * 1.5) % (Math.PI * 2);
-            const winner = normalizedAngle < Math.PI ? room.opt2 : room.opt1;
+            const alpha = (1.5 * Math.PI - (wheelAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+            const winner = alpha < Math.PI ? room.opt1 : room.opt2;
             showToast(`Результат: ${winner}`);
         }
 
-        /* --- КАЗИНО ДУЭЛЬ --- */
+        /* --- КАЗИНО СЛОТЫ (РЕАЛИСТИЧНЫЕ) --- */
+        const slotSymbols = ['🍒', '🍋', '🍊', '🍇', '💎', '7️⃣'];
+
         function resetCasinoUi() {
-            document.getElementById('casinoHostDice').innerText = '🎲';
-            document.getElementById('casinoGuestDice').innerText = '🎲';
+            const reelsHost = document.getElementById('casinoHostSlots').children;
+            const reelsGuest = document.getElementById('casinoGuestSlots').children;
+            for(let i=0; i<3; i++) {
+                reelsHost[i].innerText = '🎰';
+                reelsGuest[i].innerText = '🎰';
+            }
             document.getElementById('casinoActionBtn').innerText = "Подтвердить ставку";
             document.getElementById('casinoActionBtn').disabled = false;
             room.hostReady = false; room.guestReady = false;
@@ -703,34 +747,69 @@
         }
 
         function executeCasinoRoll() {
-            room.finalHostRoll = Math.floor(Math.random() * 6) + 1;
-            room.finalGuestRoll = Math.floor(Math.random() * 6) + 1;
-            sendToPeer({ type: 'DICE_ANIMATE', hRoll: room.finalHostRoll, gRoll: room.finalGuestRoll });
-            animateDiceLocal(room.finalHostRoll, room.finalGuestRoll);
+            room.hostSlots = [Math.floor(Math.random()*6), Math.floor(Math.random()*6), Math.floor(Math.random()*6)];
+            room.guestSlots = [Math.floor(Math.random()*6), Math.floor(Math.random()*6), Math.floor(Math.random()*6)];
+            
+            sendToPeer({ type: 'SLOTS_ANIMATE', hSlots: room.hostSlots, gSlots: room.guestSlots });
+            animateSlotsLocal(room.hostSlots, room.guestSlots);
         }
 
-        function animateDiceLocal(hRoll, gRoll) {
-            let ticks = 0;
-            const diceIcons = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+        function animateSlotsLocal(hSlots, gSlots) {
+            const reelsHost = document.getElementById('casinoHostSlots').children;
+            const reelsGuest = document.getElementById('casinoGuestSlots').children;
+            
+            let start = Date.now();
+            const stopDelays = [1000, 1500, 2000]; // Барабаны останавливаются по очереди
+            
             const interval = setInterval(() => {
-                document.getElementById('casinoHostDice').innerText = diceIcons[Math.floor(Math.random() * 6)];
-                document.getElementById('casinoGuestDice').innerText = diceIcons[Math.floor(Math.random() * 6)];
-                document.getElementById('casinoHostDice').style.transform = `rotate(${ticks * 45}deg)`;
-                document.getElementById('casinoGuestDice').style.transform = `rotate(-${ticks * 45}deg)`;
-                ticks++;
-                if (ticks > 12) {
-                    clearInterval(interval);
-                    document.getElementById('casinoHostDice').innerText = diceIcons[hRoll - 1];
-                    document.getElementById('casinoGuestDice').innerText = diceIcons[gRoll - 1];
-                    document.getElementById('casinoHostDice').style.transform = 'none';
-                    document.getElementById('casinoGuestDice').style.transform = 'none';
-                    resolveCasinoBattle(hRoll, gRoll);
+                let now = Date.now();
+                let elapsed = now - start;
+                
+                // Кручение барабанов хоста
+                for (let i = 0; i < 3; i++) {
+                    if (elapsed < stopDelays[i]) {
+                        reelsHost[i].innerText = slotSymbols[Math.floor(Math.random() * 6)];
+                        reelsHost[i].style.transform = `translateY(${Math.sin(now / 15) * 4}px)`;
+                    } else {
+                        reelsHost[i].innerText = slotSymbols[hSlots[i]];
+                        reelsHost[i].style.transform = 'none';
+                    }
                 }
-            }, 100);
+                
+                // Кручение барабанов гостя
+                for (let i = 0; i < 3; i++) {
+                    if (elapsed < stopDelays[i]) {
+                        reelsGuest[i].innerText = slotSymbols[Math.floor(Math.random() * 6)];
+                        reelsGuest[i].style.transform = `translateY(${Math.sin(now / 15) * 4}px)`;
+                    } else {
+                        reelsGuest[i].innerText = slotSymbols[gSlots[i]];
+                        reelsGuest[i].style.transform = 'none';
+                    }
+                }
+                
+                if (elapsed > stopDelays[2] + 100) {
+                    clearInterval(interval);
+                    resolveCasinoBattle(hSlots, gSlots);
+                }
+            }, 50);
         }
 
-        function resolveCasinoBattle(hostScore, guestScore) {
+        // Подсчёт очков комбинации
+        function evaluateSlotsScore(slots) {
+            const [a, b, c] = slots;
+            if (a === b && b === c) return 1000 + a * 100; // Три в ряд (самое крутое)
+            if (a === b) return 100 + a * 10 + c;          // Пара
+            if (a === c) return 100 + a * 10 + b;          // Пара
+            if (b === c) return 100 + b * 10 + a;          // Пара
+            const sorted = [...slots].sort((x, y) => y - x);
+            return sorted[0] * 10 + sorted[1];             // Просто старшие символы
+        }
+
+        function resolveCasinoBattle(hSlots, gSlots) {
+            const hostScore = evaluateSlotsScore(hSlots);
+            const guestScore = evaluateSlotsScore(gSlots);
             const totalPool = room.hostBet + room.guestBet;
+            
             if (hostScore === guestScore) {
                 showToast("Ничья! Возврат ставок.");
                 myBalance += isHost ? room.hostBet : room.guestBet;
