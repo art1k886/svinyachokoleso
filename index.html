@@ -699,6 +699,12 @@
             room.opt2 = document.getElementById('inputOpt2').value || 'Вариант 2';
             broadcastState();
             initWheel();
+        }
+
+        function initWheel() {
+            drawWheel(wheelAngle);
+        }
+
         function drawWheel(currentAngle) {
             const colors = ['#ff7597', '#b57bee'];
             const labels = [room.opt1, room.opt2];
@@ -716,7 +722,6 @@
                 
                 // Вычисляем середину текущего сектора для выравнивания
                 const middleAngle = angleStart + Math.PI / 2;
-                
                 ctx.save(); 
                 ctx.translate(center, center); 
                 // Смещаем текст на медиану и разворачиваем в строго горизонтальное положение (0 градусов)
@@ -728,7 +733,7 @@
                 ctx.font = 'bold 18px Inter'; 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(labels[i], 0, 0); 
+                ctx.fillText(labels[i], 0, 0);
                 ctx.restore();
             }
         }
