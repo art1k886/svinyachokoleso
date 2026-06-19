@@ -38,7 +38,7 @@
             position: relative;
         }
 
-        /* Анимированные жидкие сферы на фоне */
+        /* Жидкие сферы */
         .bg-blur-1, .bg-blur-2 {
             position: absolute;
             border-radius: 50%;
@@ -69,7 +69,6 @@
             100% { transform: translate(50px, 30px) scale(1.15); }
         }
 
-        /* Стилизация верхнего тулбара */
         .top-bar {
             position: fixed;
             top: 24px;
@@ -112,7 +111,6 @@
             width: 140px;
         }
 
-        /* Общие стили "жидкого стекла" для кнопок */
         .btn-glass {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
@@ -136,9 +134,8 @@
             transform: translateY(-4px) scale(1.03);
             box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
         }
-        .btn-glass:active {
-            transform: translateY(-1px) scale(0.98);
-        }
+        .btn-glass:active { transform: translateY(-1px) scale(0.98); }
+        
         .btn-primary {
             background: var(--accent-primary);
             border: none;
@@ -150,7 +147,6 @@
             box-shadow: 0 15px 30px rgba(255, 117, 140, 0.3);
         }
 
-        /* Экранные контейнеры */
         .screen {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--glass-border);
@@ -175,7 +171,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Главное меню */
         #menu-screen h1 {
             font-size: 48px;
             font-weight: 800;
@@ -185,12 +180,8 @@
             -webkit-text-fill-color: transparent;
             letter-spacing: -1px;
         }
-        .menu-buttons {
-            display: flex;
-            gap: 24px;
-        }
+        .menu-buttons { display: flex; gap: 24px; }
 
-        /* Лобби */
         .room-code-panel {
             background: rgba(0,0,0,0.2);
             padding: 16px 32px;
@@ -204,11 +195,8 @@
             margin-bottom: 40px;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .btn-copy {
-            padding: 8px 16px;
-            font-size: 12px;
-            border-radius: 12px;
-        }
+        .btn-copy { padding: 8px 16px; font-size: 12px; border-radius: 12px; }
+        
         .players-list {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -238,7 +226,6 @@
             letter-spacing: 1px;
         }
 
-        /* Инпуты */
         .glass-input {
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--glass-border);
@@ -251,6 +238,7 @@
             transition: all 0.3s;
             margin-bottom: 24px;
             width: 280px;
+            text-transform: uppercase;
         }
         .glass-input:focus {
             border-color: rgba(255,255,255,0.3);
@@ -258,7 +246,6 @@
             box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
 
-        /* Режимы Игры: Колесо Фортуны */
         .game-layout {
             display: grid;
             grid-template-columns: 1.2fr 1fr;
@@ -281,17 +268,9 @@
             color: #fff;
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        .canvas-holder {
-            position: relative;
-            width: 360px;
-            height: 360px;
-        }
-        canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-        }
+        .canvas-holder { position: relative; width: 360px; height: 360px; }
+        canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
+        
         .wheel-center-pointer {
             position: absolute;
             top: 50%;
@@ -330,17 +309,8 @@
             border-radius: 24px;
             border: 1px solid var(--glass-border);
         }
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .input-group label {
-            font-size: 12px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-weight: 600;
-        }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
         .panel-input {
             background: rgba(0,0,0,0.2);
             border: 1px solid var(--glass-border);
@@ -351,34 +321,10 @@
             outline: none;
         }
 
-        /* Режим Казино */
-        .casino-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            width: 100%;
-            margin-top: 20px;
-        }
-        .casino-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 24px;
-            text-align: center;
-        }
-        .balance-badge {
-            font-size: 28px;
-            font-weight: 800;
-            color: #8ec5fc;
-            margin: 12px 0;
-        }
-        .dice-container {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin: 24px 0;
-            min-height: 70px;
-        }
+        .casino-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 100%; margin-top: 20px; }
+        .casino-card { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 24px; padding: 24px; text-align: center; }
+        .balance-badge { font-size: 28px; font-weight: 800; color: #8ec5fc; margin: 12px 0; }
+        .dice-container { display: flex; justify-content: center; gap: 16px; margin: 24px 0; min-height: 70px; }
         .dice {
             width: 64px;
             height: 64px;
@@ -398,7 +344,6 @@
             100% { transform: scale(1) rotate(0); opacity: 1; }
         }
         
-        /* Всплывающее уведомление (Toast) */
         .toast {
             position: fixed;
             bottom: 32px;
@@ -417,7 +362,6 @@
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
-        /* Переключатель режимов */
         .mode-selector {
             display: flex;
             gap: 12px;
@@ -427,26 +371,9 @@
             border-radius: 50px;
             border: 1px solid var(--glass-border);
         }
-        .mode-tab {
-            padding: 10px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .mode-tab.active {
-            background: rgba(255,255,255,0.08);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .status-message {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #ff7eb3;
-            min-height: 20px;
-            font-weight: 500;
-        }
+        .mode-tab { padding: 10px 24px; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .mode-tab.active { background: rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .status-message { margin-top: 15px; font-size: 14px; color: #ff7eb3; min-height: 20px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -546,15 +473,13 @@
                 <div class="player-role">Хост</div>
                 <div class="player-name" id="casino-host-name">Player 1</div>
                 <div class="balance-badge" id="casino-host-balance">$1000</div>
-                <div class="dice-container" id="casino-host-dice">
-                    </div>
+                <div class="dice-container" id="casino-host-dice"></div>
             </div>
             <div class="casino-card" id="casino-guest-card">
                 <div class="player-role">Гость</div>
                 <div class="player-name" id="casino-guest-name">Player 2</div>
                 <div class="balance-badge" id="casino-guest-balance">$1000</div>
-                <div class="dice-container" id="casino-guest-dice">
-                    </div>
+                <div class="dice-container" id="casino-guest-dice"></div>
             </div>
         </div>
 
@@ -573,55 +498,38 @@
     <div class="toast" id="toast-notify">Код успешно скопирован!</div>
 
     <script>
-        /**
-         * Мощная Кросс-Таб Онлайн Синхронизация по LocalStorage.
-         * Позволяет симулировать полноценный WebSocket сервер между вкладками.
-         */
         const STATE_KEY_PREFIX = "LGS_ROOM_";
+        const syncChannel = new BroadcastChannel('liquid_glass_sync');
 
         let appState = {
-            role: null, // 'host' или 'guest'
+            role: null, 
             roomCode: null,
             nickname: "Игрок_" + Math.floor(Math.random() * 900),
             currentScreen: "menu",
             roomData: {
-                hostName: "",
-                guestName: "",
-                gameStarted: false,
-                selectedMode: "wheel", // wheel | casino
-                wheelTitle: "Кто моет посуду?",
-                wheelOpt1: "Ты",
-                wheelOpt2: "Я",
-                wheelAngle: 0,
-                wheelSpeed: 0,
-                wheelIsSpinning: false,
-                // Казино данные
-                hostBalance: 1000,
-                guestBalance: 1000,
-                currentBet: 100,
-                hostDice: [],
-                guestDice: [],
-                lastRollTimestamp: 0
+                hostName: "", guestName: "", gameStarted: false, selectedMode: "wheel",
+                wheelTitle: "Кто моет посуду?", wheelOpt1: "Ты", wheelOpt2: "Я",
+                wheelAngle: 0, wheelSpeed: 0, wheelIsSpinning: false,
+                hostBalance: 1000, guestBalance: 1000, currentBet: 100,
+                hostDice: [], guestDice: [], lastRollTimestamp: 0, casinoStatusText: ""
             }
         };
 
-        // Инициализация дефолтного никнейма в инпуте
         document.getElementById('nickname-input').value = appState.nickname;
 
-        // Генератор уникального комнатного кода
         function generateRoomCode() {
             const letters = Math.random().toString(36).substring(2, 6).toUpperCase();
             const numbers = Math.floor(1000 + Math.random() * 9000);
             return `${letters}_${numbers}`;
         }
 
-        // Сохранение состояния комнаты на "сервер" (в локальное хранилище)
         function pushRoomState() {
             if (!appState.roomCode) return;
-            localStorage.setItem(STATE_KEY_PREFIX + appState.roomCode, JSON.stringify(appState.roomData));
+            const stateString = JSON.stringify(appState.roomData);
+            localStorage.setItem(STATE_KEY_PREFIX + appState.roomCode, stateString);
+            syncChannel.postMessage({ roomCode: appState.roomCode, roomData: appState.roomData });
         }
 
-        // Получение состояния комнаты с "сервера"
         function fetchRoomState() {
             if (!appState.roomCode) return null;
             const data = localStorage.getItem(STATE_KEY_PREFIX + appState.roomCode);
@@ -632,37 +540,25 @@
             return null;
         }
 
-        // Прослушивание изменений от другой вкладки в реальном времени
         window.addEventListener('storage', (e) => {
-            if (e.key === STATE_KEY_PREFIX + appState.roomCode) {
+            if (e.key === STATE_KEY_PREFIX + appState.roomCode && e.newValue) {
                 appState.roomData = JSON.parse(e.newValue);
                 syncUiWithState();
             }
         });
 
-        // Таймер для непрерывной плавной синхронизации физики и анимаций
-        setInterval(() => {
-            if (appState.roomCode) {
-                // Если крутится колесо, синхронизируем углы
-                if (appState.roomData.wheelIsSpinning) {
-                    fetchRoomState();
-                }
+        syncChannel.onmessage = (e) => {
+            if (e.data.roomCode === appState.roomCode) {
+                appState.roomData = e.data.roomData;
+                syncUiWithState();
             }
-        }, 100);
+        };
 
-        // Показ экранов
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId + '-screen').classList.add('active');
             appState.currentScreen = screenId;
-
-            // Логика отображения кнопки "В меню"
-            const menuBtn = document.getElementById('btn-to-menu');
-            if (screenId === 'menu' || screenId === 'join') {
-                menuBtn.style.display = 'none';
-            } else {
-                menuBtn.style.display = 'flex';
-            }
+            document.getElementById('btn-to-menu').style.display = (screenId === 'menu' || screenId === 'join') ? 'none' : 'flex';
         }
 
         function showToast(text) {
@@ -672,17 +568,14 @@
             setTimeout(() => t.classList.remove('show'), 2500);
         }
 
-        // Синхронизация UI на основе данных из appState
         function syncUiWithState() {
             const rd = appState.roomData;
             if (!rd) return;
 
-            // Лобби
             document.getElementById('lobby-code-display').innerText = appState.roomCode || '';
             document.getElementById('lobby-host-name').innerText = rd.hostName || 'Ожидание...';
             document.getElementById('lobby-guest-name').innerText = rd.guestName || 'Ожидание игрока...';
 
-            // Контроль доступности кнопки старта для хоста
             const startBtn = document.getElementById('btn-start-game');
             const statusText = document.getElementById('lobby-status-text');
             
@@ -700,41 +593,27 @@
                 statusText.innerText = "Нужно два игрока для запуска";
             }
 
-            // Синхронное переключение вкладок модов внутри лобби
             document.querySelectorAll('.mode-tab').forEach(tab => {
-                if (tab.dataset.mode === rd.selectedMode) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
+                tab.classList.toggle('active', tab.dataset.mode === rd.selectedMode);
             });
 
-            // Автоматический переход на экран игры при старте
             if (rd.gameStarted && (appState.currentScreen === 'lobby' || appState.currentScreen === 'menu')) {
-                if (rd.selectedMode === 'wheel') switchScreen('game-wheel');
-                if (rd.selectedMode === 'casino') switchScreen('game-casino');
+                switchScreen(rd.selectedMode === 'wheel' ? 'game-wheel' : 'game-casino');
             }
 
-            // Обновление текстов колеса
             document.getElementById('wheel-live-title').innerText = rd.wheelTitle;
-            if (document.activeElement !== document.getElementById('wheel-input-title')) {
-                document.getElementById('wheel-input-title').value = rd.wheelTitle;
-            }
-            if (document.activeElement !== document.getElementById('wheel-input-opt1')) {
-                document.getElementById('wheel-input-opt1').value = rd.wheelOpt1;
-            }
-            if (document.activeElement !== document.getElementById('wheel-input-opt2')) {
-                document.getElementById('wheel-input-opt2').value = rd.wheelOpt2;
-            }
+            if (document.activeElement !== document.getElementById('wheel-input-title')) document.getElementById('wheel-input-title').value = rd.wheelTitle;
+            if (document.activeElement !== document.getElementById('wheel-input-opt1')) document.getElementById('wheel-input-opt1').value = rd.wheelOpt1;
+            if (document.activeElement !== document.getElementById('wheel-input-opt2')) document.getElementById('wheel-input-opt2').value = rd.wheelOpt2;
 
-            // Синхронизация данных Казино
             document.getElementById('casino-host-name').innerText = rd.hostName;
-            document.getElementById('casino-guest-name').innerText = rd.guestName;
+            document.getElementById('casino-guest-name').innerText = rd.guestName || "Ожидание...";
             document.getElementById('casino-host-balance').innerText = `$${rd.hostBalance}`;
             document.getElementById('casino-guest-balance').innerText = `$${rd.guestBalance}`;
             
             renderDice('casino-host-dice', rd.hostDice);
             renderDice('casino-guest-dice', rd.guestDice);
+            if (rd.casinoStatusText) document.getElementById('casino-status-msg').innerText = rd.casinoStatusText;
         }
 
         function renderDice(containerId, diceArray) {
@@ -752,9 +631,6 @@
             });
         }
 
-        // СЛУШАТЕЛИ СОБЫТИЙ СЕТЕВОГО ИНТЕРФЕЙСА
-        
-        // Смена никнейма
         document.getElementById('nickname-input').addEventListener('input', (e) => {
             appState.nickname = e.target.value.trim() || "Аноним";
             if (appState.roomCode) {
@@ -765,77 +641,56 @@
             }
         });
 
-        // Создать комнату
         document.getElementById('btn-create-room').addEventListener('click', () => {
             appState.role = 'host';
             appState.roomCode = generateRoomCode();
-            
-            // Настройка чистой комнаты
             appState.roomData.hostName = appState.nickname;
             appState.roomData.guestName = "";
             appState.roomData.gameStarted = false;
-            
             pushRoomState();
             syncUiWithState();
             switchScreen('lobby');
-            showToast("Комната успешно создана!");
+            showToast("Комната создана!");
         });
 
-        // Открыть панель ввода кода
-        document.getElementById('btn-join-room-ui').addEventListener('click', () => {
-            switchScreen('join');
-        });
+        document.getElementById('btn-join-room-ui').addEventListener('click', () => switchScreen('join'));
+        document.getElementById('btn-back-to-menu-2').addEventListener('click', () => switchScreen('menu'));
 
-        document.getElementById('btn-back-to-menu-2').addEventListener('click', () => {
-            switchScreen('menu');
-        });
-
-        // Подключиться по коду
         document.getElementById('btn-submit-join').addEventListener('click', () => {
-            const code = document.getElementById('join-code-input').value.trim();
+            const code = document.getElementById('join-code-input').value.trim().toUpperCase();
             if (!code) return showToast("Введите код!");
 
             const rawData = localStorage.getItem(STATE_KEY_PREFIX + code);
-            if (!rawData) {
-                return showToast("Комната не найдена!");
-            }
+            if (!rawData) return showToast("Комната не найдена!");
 
             appState.roomCode = code;
             appState.role = 'guest';
             appState.roomData = JSON.parse(rawData);
 
-            if (appState.roomData.guestName !== "") {
-                return showToast("Комната уже заполнена!");
-            }
+            if (appState.roomData.guestName !== "") return showToast("Комната уже заполнена!");
 
             appState.roomData.guestName = appState.nickname;
             pushRoomState();
             syncUiWithState();
             switchScreen('lobby');
-            showToast("Вы успешно вошли в лобби!");
+            showToast("Вы вошли в лобби!");
         });
 
-        // Выбор режима (Доступно только Хосту)
         document.querySelectorAll('.mode-tab').forEach(tab => {
             tab.addEventListener('click', () => {
-                if (appState.role !== 'host') {
-                    showToast("Только хост выбирает режим игры!");
-                    return;
-                }
+                if (appState.role !== 'host') return showToast("Только хост выбирает режим!");
                 appState.roomData.selectedMode = tab.dataset.mode;
                 pushRoomState();
                 syncUiWithState();
             });
         });
 
-        // Кнопка Копирования Кода
         document.getElementById('btn-copy-code').addEventListener('click', () => {
             if (!appState.roomCode) return;
             navigator.clipboard.writeText(appState.roomCode);
             showToast("Код скопирован: " + appState.roomCode);
         });
 
-        // Запуск игры Хостом
         document.getElementById('btn-start-game').addEventListener('click', () => {
             if (appState.role !== 'host') return;
             appState.roomData.gameStarted = true;
@@ -843,13 +698,10 @@
             syncUiWithState();
         });
 
-        // Кнопка "В меню" универсальная
         document.getElementById('btn-to-menu').addEventListener('click', () => {
             if (appState.role === 'host') {
-                // Если хост выходит, комната закрывается
                 localStorage.removeItem(STATE_KEY_PREFIX + appState.roomCode);
             } else if (appState.role === 'guest' && appState.roomData) {
-                // Если выходит гость, освобождаем слот
                 appState.roomData.guestName = "";
                 appState.roomData.gameStarted = false;
                 pushRoomState();
@@ -859,19 +711,11 @@
             switchScreen('menu');
         });
 
-
-        /** =========================================================
-         * ЛОГИКА РАБОТЫ КОЛЕСА ФОРТУНЫ (РЕАЛИСТИЧНАЯ ФИЗИКА)
-         * ========================================================= */
+        // Физика Колеса
         const canvas = document.getElementById('wheel-canvas');
         const ctx = canvas.getContext('2d');
+        let localAngle = 0, localSpeed = 0, friction = 0.985;
 
-        // Локальные переменные интерполяции физики вращения
-        let localAngle = 0;
-        let localSpeed = 0;
-        const friction = 0.985; // Коэффициент реалистичного трения воздуха
-
-        // Инпуты динамического изменения полей колеса
         ['wheel-input-title', 'wheel-input-opt1', 'wheel-input-opt2'].forEach(id => {
             document.getElementById(id).addEventListener('input', () => {
                 appState.roomData.wheelTitle = document.getElementById('wheel-input-title').value;
@@ -882,172 +726,97 @@
             });
         });
 
-        // Рендеринг Canvas Колеса
         function drawWheel() {
             const rd = appState.roomData;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const radius = canvas.width / 2 - 10;
+            const cx = canvas.width / 2, cy = canvas.height / 2, radius = canvas.width / 2 - 10;
 
-            // Сектор 1 (Розовый)
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, radius, localAngle, localAngle + Math.PI);
-            ctx.fillStyle = '#ff758c';
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, localAngle, localAngle + Math.PI);
+            ctx.fillStyle = '#ff758c'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.stroke();
 
-            // Текст 1
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(localAngle + Math.PI / 2);
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 18px Plus Jakarta Sans';
-            ctx.fillText(rd.wheelOpt1, 0, -radius/2);
-            ctx.restore();
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(localAngle + Math.PI / 2);
+            ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Plus Jakarta Sans';
+            ctx.fillText(rd.wheelOpt1, 0, -radius/2); ctx.restore();
 
-            // Сектор 2 (Голубой)
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, radius, localAngle + Math.PI, localAngle + Math.PI * 2);
-            ctx.fillStyle = '#8ec5fc';
-            ctx.fill();
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, localAngle + Math.PI, localAngle + Math.PI * 2);
+            ctx.fillStyle = '#8ec5fc'; ctx.fill(); ctx.stroke();
 
-            // Текст 2
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(localAngle + Math.PI * 1.5);
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#191b2d';
-            ctx.font = 'bold 18px Plus Jakarta Sans';
-            ctx.fillText(rd.wheelOpt2, 0, -radius/2);
-            ctx.restore();
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(localAngle + Math.PI * 1.5);
+            ctx.textAlign = 'center'; ctx.fillStyle = '#191b2d'; ctx.font = 'bold 18px Plus Jakarta Sans';
+            ctx.fillText(rd.wheelOpt2, 0, -radius/2); ctx.restore();
         }
 
-        // Клик по центру колеса (Импульсное накопление скорости мульти-кликом!)
         document.getElementById('wheel-spin-trigger').addEventListener('click', () => {
-            // Импульс ускорения добавляется при каждом нажатии!
-            localSpeed += 0.35; 
-            if(localSpeed > 1.5) localSpeed = 1.5; // Ограничение гиперскорости
-            
+            localSpeed += 0.35;
+            if(localSpeed > 1.5) localSpeed = 1.5;
             appState.roomData.wheelIsSpinning = true;
             appState.roomData.wheelSpeed = localSpeed;
             pushRoomState();
         });
 
-        // Основной физический цикл апдейта графики колеса
         function updatePhysicsLoop() {
             if (appState.roomData && appState.roomData.wheelIsSpinning) {
-                // Если скорость затухания упала критически — останавливаем
                 if (localSpeed < 0.002) {
                     localSpeed = 0;
                     appState.roomData.wheelIsSpinning = false;
                     appState.roomData.wheelSpeed = 0;
                     pushRoomState();
-                    
-                    // Вычисляем победителя локально
-                    const normalizedAngle = (localAngle % (Math.PI * 2));
-                    // Указатель сверху (-Math.PI/2)
-                    let sector = Math.floor(normalizedAngle / Math.PI) % 2;
-                    // Определение точного сектора на основе угла покоя
                     showToast("Выпал вариант: " + (localAngle % (Math.PI * 2) > Math.PI ? appState.roomData.wheelOpt1 : appState.roomData.wheelOpt2));
                 } else {
-                    localSpeed *= friction;
-                    localAngle += localSpeed;
+                    localSpeed *= friction; localAngle += localSpeed;
                     appState.roomData.wheelAngle = localAngle;
                 }
             } else if (appState.roomData) {
-                // Плавная интерполяция угла с сетевыми данными для ведомого клиента
                 localAngle = appState.roomData.wheelAngle;
                 localSpeed = appState.roomData.wheelSpeed;
             }
-
             drawWheel();
             requestAnimationFrame(updatePhysicsLoop);
         }
-        
-        // Старт физического движка
         requestAnimationFrame(updatePhysicsLoop);
 
-
-        /** =========================================================
-         * ЛОГИКА РАБОТЫ РЕЖИМА КАЗИНО (СТАВКИ И СОРЕВНОВАНИЕ)
-         * ========================================================= */
+        // Казино логика
         document.getElementById('btn-casino-roll').addEventListener('click', () => {
             const rd = appState.roomData;
-            const betInput = document.getElementById('casino-bet-input');
-            const betAmount = parseInt(betInput.value);
+            const betAmount = parseInt(document.getElementById('casino-bet-input').value);
 
-            if (isNaN(betAmount) || betAmount <= 0) {
-                return showToast("Введите корректную ставку!");
-            }
-
-            // Проверка баланса игрока в зависимости от его текущей роли
+            if (isNaN(betAmount) || betAmount <= 0) return showToast("Введите ставку!");
             if (appState.role === 'host' && rd.hostBalance < betAmount) return showToast("Недостаточно средств!");
             if (appState.role === 'guest' && rd.guestBalance < betAmount) return showToast("Недостаточно средств!");
 
-            // Генерируем бросок для текущего игрока
             const d1 = Math.floor(Math.random() * 6) + 1;
             const d2 = Math.floor(Math.random() * 6) + 1;
 
-            if (appState.role === 'host') {
-                rd.hostDice = [d1, d2];
-            } else {
-                rd.guestDice = [d1, d2];
-            }
-            
+            if (appState.role === 'host') rd.hostDice = [d1, d2]; else rd.guestDice = [d1, d2];
             rd.currentBet = betAmount;
-            rd.lastRollTimestamp = Date.now();
             
-            document.getElementById('casino-status-msg').innerText = "Вы совершили бросок! Ожидаем кубики оппонента...";
-            
-            // Если оба игрока сделали свои броски в текущем раунде, рассчитываем выигрыш
             if (rd.hostDice.length > 0 && rd.guestDice.length > 0) {
                 const hostScore = rd.hostDice[0] + rd.hostDice[1];
                 const guestScore = rd.guestDice[0] + rd.guestDice[1];
                 
                 if (hostScore > guestScore) {
-                    rd.hostBalance += rd.currentBet;
-                    rd.guestBalance -= rd.currentBet;
-                    rd.casinoStatusText = `Победил Хост с суммой ${hostScore} против ${guestScore}!`;
+                    rd.hostBalance += rd.currentBet; rd.guestBalance -= rd.currentBet;
+                    rd.casinoStatusText = `Победил Хост (${hostScore} против ${guestScore})!`;
                 } else if (guestScore > hostScore) {
-                    rd.guestBalance += rd.currentBet;
-                    rd.hostBalance -= rd.currentBet;
-                    rd.casinoStatusText = `Победил Гость с суммой ${guestScore} против ${hostScore}!`;
+                    rd.guestBalance += rd.currentBet; rd.hostBalance -= rd.currentBet;
+                    rd.casinoStatusText = `Победил Гость (${guestScore} против ${hostScore})!`;
                 } else {
-                    rd.casinoStatusText = `Ничья! У обоих по ${hostScore}. Ставки возвращены.`;
+                    rd.casinoStatusText = `Ничья (${hostScore} = ${guestScore})! Ставки возвращены.`;
                 }
                 
-                // Очищаем кости для следующего раунда через задержку в интерфейсе
                 setTimeout(() => {
                     fetchRoomState();
                     appState.roomData.hostDice = [];
                     appState.roomData.guestDice = [];
                     pushRoomState();
                     syncUiWithState();
-                }, 5000);
+                }, 4000);
             } else {
-                rd.casinoStatusText = `Один из игроков сделал ход. Ждем второго! Ставка: $${rd.currentBet}`;
+                rd.casinoStatusText = `Ждем кубики соперника... Ставка: $${rd.currentBet}`;
             }
-
             pushRoomState();
             syncUiWithState();
-            document.getElementById('casino-status-msg').innerText = rd.casinoStatusText;
         });
-
-        // Следим за текстом статуса казино глобально
-        setInterval(() => {
-            if(appState.roomCode && appState.roomData.casinoStatusText) {
-                document.getElementById('casino-status-msg').innerText = appState.roomData.casinoStatusText;
-            }
-        }, 300);
-
     </script>
 </body>
 </html>
