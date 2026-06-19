@@ -99,7 +99,7 @@
         }
 
         .btn-liquid:active { transform: translateY(-1px) scale(0.98); }
-        .btn-liquid:disabled { opacity: 0.5; pointer-events: none; }
+        .btn-liquid:disabled { opacity: 0.4; pointer-events: none; }
 
         .btn-accent {
             background: linear-gradient(135deg, rgba(255, 117, 151, 0.2), rgba(181, 123, 238, 0.2));
@@ -247,7 +247,9 @@
             justify-content: center;
             color: #000;
             font-weight: 800;
-            font-size: 12px;
+            font-size: 11px;
+            text-align: center;
+            line-height: 1.1;
         }
 
         .wheel-config { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 15px; }
@@ -262,7 +264,6 @@
         }
         .balance-card span { color: #4ade80; font-weight: 800; }
 
-        /* --- СТИЛИ СЛОТОВ --- */
         .duel-arena { display: flex; justify-content: space-around; width: 100%; margin: 20px 0; gap: 20px; }
         .duel-player-box {
             flex: 1;
@@ -366,7 +367,7 @@
         <div class="wheel-section">
             <div class="wheel-wrapper">
                 <div class="wheel-pointer"></div>
-                <div class="spin-center-btn" onclick="spinWheelClick()">КРУТИ</div>
+                <div class="spin-center-btn" onclick="spinWheelClick()">КРУТИ<br>ЕЩЁ</div>
                 <canvas id="wheelCanvas" width="320" height="320"></canvas>
             </div>
             <div class="wheel-config" id="wheelInputsConfig">
@@ -401,9 +402,13 @@
                 </div>
             </div>
         </div>
-        <div style="max-width: 300px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px;">
-            <input type="number" id="betInput" class="glass-input" placeholder="Размер ставки" value="100">
-            <button onclick="placeCasinoBet()" id="casinoActionBtn" class="btn-liquid btn-accent">Подтвердить ставку</button>
+        <div style="max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+                <button id="btnBetMinus" onclick="adjustBet(-10)" class="btn-liquid" style="padding: 12px 18px; min-width: 60px;">-10</button>
+                <input type="number" id="betInput" class="glass-input" placeholder="Ставка" value="100" style="width: 120px;">
+                <button id="btnBetPlus" onclick="adjustBet(10)" class="btn-liquid" style="padding: 12px 18px; min-width: 60px;">+10</button>
+            </div>
+            <button onclick="casinoActionClick()" id="casinoActionBtn" class="btn-liquid btn-accent" style="width: 100%;">Подтвердить ставку</button>
         </div>
     </div>
 
@@ -423,12 +428,13 @@
             state: 'menu', selectedMode: 'wheel',
             wheelTitle: 'Кто моет посуду?', opt1: 'Ты', opt2: 'Не ты',
             hostBet: 0, guestBet: 0, hostReady: false, guestReady: false,
+            hostSpinClicked: false, guestSpinClicked: false,
             hostSlots: [0,0,0], guestSlots: [0,0,0]
         };
 
         let wheelAngle = 0;
         let wheelVelocity = 0;
-        const friction = 0.985;
+        const friction = 0.988;
         let isSpinning = false;
 
         document.getElementById('topNickInput').value = myNick;
@@ -445,7 +451,6 @@
 
         document.getElementById('btnGoMenu').addEventListener('click', () => { handleDisconnect(); });
 
-        // Функция принудительного выброса в главное меню при дисконнекте
         function handleDisconnect() {
             showToast("Соединение прервано. Возврат в главное меню...");
             setTimeout(() => {
@@ -457,11 +462,12 @@
                     state: 'menu', selectedMode: 'wheel',
                     wheelTitle: 'Кто моет посуду?', opt1: 'Ты', opt2: 'Не ты',
                     hostBet: 0, guestBet: 0, hostReady: false, guestReady: false,
+                    hostSpinClicked: false, guestSpinClicked: false,
                     hostSlots: [0,0,0], guestSlots: [0,0,0]
                 };
                 switchScreen('screenMain');
                 document.getElementById('btnGoMenu').style.display = 'none';
-            }, 1500);
+            }, 1200);
         }
 
         function createRoom() {
@@ -536,18 +542,18 @@
                         room.guestNick = data.nick;
                         broadcastState();
                     }
-                    if (data.type === 'SPIN_CLIK') {
-                        if (!isSpinning) {
-                            let force = 12 + Math.random() * 8;
-                            sendToPeer({ type: 'WHEEL_SPIN_EVENT', vel: force });
-                            processWheelPhysics(force);
-                        }
+                    if (data.type === 'SPIN_CLICK') {
+                        handleWheelSpinLogic();
                     }
                     if (data.type === 'GUEST_BET') {
                         room.guestBet = data.bet;
                         room.guestReady = true;
                         broadcastState();
-                        if (room.hostReady && room.guestReady) executeCasinoRoll();
+                    }
+                    if (data.type === 'GUEST_SPIN_CLICK') {
+                        room.guestSpinClicked = true;
+                        broadcastState();
+                        checkAndTriggerSlots();
                     }
                 } else {
                     if (data.type === 'SYNC') {
@@ -557,7 +563,11 @@
                         if (oldState !== room.state) applyScreenChange(room.state);
                     }
                     if (data.type === 'WHEEL_SPIN_EVENT') {
-                        processWheelPhysics(data.vel);
+                        if (data.isAccel) {
+                            if (isSpinning) wheelVelocity = Math.min(45, wheelVelocity + data.vel);
+                        } else {
+                            processWheelPhysics(data.vel);
+                        }
                     }
                     if (data.type === 'SLOTS_ANIMATE') {
                         animateSlotsLocal(data.hSlots, data.gSlots);
@@ -569,7 +579,6 @@
                 }
             });
 
-            // Любое закрытие канала связи возвращает обоих в меню
             conn.on('close', handleDisconnect);
             conn.on('error', handleDisconnect);
         }
@@ -623,6 +632,52 @@
             document.getElementById('casinoGuestName').innerText = room.guestNick || "Игрок";
             document.getElementById('casinoHostBetState').innerText = `Ставка: ${room.hostBet} $ ${room.hostReady ? '✅' : ''}`;
             document.getElementById('casinoGuestBetState').innerText = `Ставка: ${room.guestBet} $ ${room.guestReady ? '✅' : ''}`;
+
+            // РЕНДЕР КНОПОК И СЛОТОВ КАЗИНО
+            const actionBtn = document.getElementById('casinoActionBtn');
+            const betInp = document.getElementById('betInput');
+            const btnMinus = document.getElementById('btnBetMinus');
+            const btnPlus = document.getElementById('btnBetPlus');
+
+            let amIReady = isHost ? room.hostReady : room.guestReady;
+            let bothBetsPlaced = room.hostReady && room.guestReady;
+            let amISpinClicked = isHost ? room.hostSpinClicked : room.guestSpinClicked;
+
+            if (!bothBetsPlaced) {
+                betInp.disabled = amIReady;
+                btnMinus.disabled = amIReady;
+                btnPlus.disabled = amIReady;
+                if (amIReady) {
+                    actionBtn.innerText = "Ожидание ставок...";
+                    actionBtn.className = "btn-liquid";
+                    actionBtn.disabled = true;
+                } else {
+                    actionBtn.innerText = "Подтвердить ставку";
+                    actionBtn.className = "btn-liquid btn-accent";
+                    actionBtn.disabled = false;
+                }
+            } else {
+                betInp.disabled = true;
+                btnMinus.disabled = true;
+                btnPlus.disabled = true;
+                if (amISpinClicked) {
+                    actionBtn.innerText = "Ожидание другого...";
+                    actionBtn.className = "btn-liquid";
+                    actionBtn.disabled = true;
+                } else {
+                    actionBtn.innerText = "🎰 КРУТИТЬ БАРАБАН";
+                    actionBtn.className = "btn-liquid btn-accent";
+                    actionBtn.disabled = false;
+                }
+            }
+        }
+
+        function adjustBet(val) {
+            let inp = document.getElementById('betInput');
+            let current = parseInt(inp.value) || 0;
+            current = Math.max(10, current + val);
+            if (current > myBalance) current = myBalance;
+            inp.value = current;
         }
 
         function copyCode() {
@@ -634,7 +689,7 @@
         function selectMode(mode) { room.selectedMode = mode; broadcastState(); }
         function startGame() { room.state = room.selectedMode; broadcastState(); applyScreenChange(room.state); }
 
-        /* --- УЛУЧШЕННОЕ КОЛЕСО ФОРТУНЫ --- */
+        /* --- КОРРЕКТНОЕ КОЛЕСО ФОРТУНЫ С УСКОРЕНИЕМ --- */
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -663,7 +718,7 @@
                 ctx.fillStyle = colors[i]; ctx.fill();
                 ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.stroke();
                 
-                // Идеальный поворот и центровка текста внутри полей
+                // Идеальный поворот и центровка текста строго посредине цветных секторов
                 ctx.save(); 
                 ctx.translate(center, center); 
                 ctx.rotate(angleStart + Math.PI / 2);
@@ -671,39 +726,51 @@
                 ctx.font = 'bold 16px Inter'; 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(labels[i], 0, -75); 
+                ctx.fillText(labels[i], 75, 0); 
                 ctx.restore();
             }
         }
 
         function spinWheelClick() {
-            if (isSpinning) return;
             if (isHost) {
-                let force = 12 + Math.random() * 8; // Случайный одинаковый толчок
+                handleWheelSpinLogic();
+            } else {
+                sendToPeer({ type: 'SPIN_CLICK' });
+            }
+        }
+
+        function handleWheelSpinLogic() {
+            if (!isSpinning) {
+                let force = 12 + Math.random() * 8;
                 sendToPeer({ type: 'WHEEL_SPIN_EVENT', vel: force });
                 processWheelPhysics(force);
             } else {
-                sendToPeer({ type: 'SPIN_CLIK' });
+                let boost = 4 + Math.random() * 2;
+                wheelVelocity = Math.min(45, wheelVelocity + boost);
+                sendToPeer({ type: 'WHEEL_SPIN_EVENT', vel: boost, isAccel: true });
             }
         }
 
         function processWheelPhysics(initialVel) {
-            wheelAngle = 0; // Начинаем с 0 для идеального совпадения координат
-            wheelVelocity = initialVel;
-            isSpinning = true;
-            
-            function animate() {
-                if (wheelVelocity > 0.05) {
-                    wheelVelocity *= friction;
-                    wheelAngle += wheelVelocity * 0.05;
-                    drawWheel(wheelAngle);
-                    requestAnimationFrame(animate);
-                } else {
-                    wheelVelocity = 0; isSpinning = false;
-                    determineWheelWinner();
+            if (!isSpinning) {
+                wheelVelocity = initialVel;
+                isSpinning = true;
+                
+                function animate() {
+                    if (wheelVelocity > 0.05) {
+                        wheelVelocity *= friction;
+                        wheelAngle += wheelVelocity * 0.05;
+                        drawWheel(wheelAngle);
+                        requestAnimationFrame(animate);
+                    } else {
+                        wheelVelocity = 0; isSpinning = false;
+                        determineWheelWinner();
+                    }
                 }
+                animate();
+            } else {
+                wheelVelocity = Math.min(45, wheelVelocity + initialVel);
             }
-            animate();
         }
 
         function determineWheelWinner() {
@@ -712,7 +779,7 @@
             showToast(`Результат: ${winner}`);
         }
 
-        /* --- КАЗИНО СЛОТЫ (РЕАЛИСТИЧНЫЕ) --- */
+        /* --- СЛОТЫ: СИНХРОНИЗАЦИЯ, СТРЕЛКИ И ВСЕГДА РАНДОМНЫЙ РЕЗУЛЬТАТ --- */
         const slotSymbols = ['🍒', '🍋', '🍊', '🍇', '💎', '7️⃣'];
 
         function resetCasinoUi() {
@@ -722,36 +789,47 @@
                 reelsHost[i].innerText = '🎰';
                 reelsGuest[i].innerText = '🎰';
             }
-            document.getElementById('casinoActionBtn').innerText = "Подтвердить ставку";
-            document.getElementById('casinoActionBtn').disabled = false;
             room.hostReady = false; room.guestReady = false;
+            room.hostSpinClicked = false; room.guestSpinClicked = false;
             room.hostBet = 0; room.guestBet = 0;
             updateUI();
         }
 
-        function placeCasinoBet() {
-            const betValue = parseInt(document.getElementById('betInput').value);
-            if (isNaN(betValue) || betValue <= 0 || betValue > myBalance) return showToast("Ошибка ставки!");
-
-            myBalance -= betValue;
-            if (isHost) {
-                room.hostBet = betValue; room.hostReady = true;
-                broadcastState();
-                if (room.hostReady && room.guestReady) executeCasinoRoll();
+        function casinoActionClick() {
+            let bothBetsPlaced = room.hostReady && room.guestReady;
+            
+            if (!bothBetsPlaced) {
+                const betValue = parseInt(document.getElementById('betInput').value);
+                if (isNaN(betValue) || betValue <= 0 || betValue > myBalance) return showToast("Ошибка ставки!");
+                
+                myBalance -= betValue;
+                if (isHost) {
+                    room.hostBet = betValue; room.hostReady = true;
+                    broadcastState();
+                } else {
+                    sendToPeer({ type: 'GUEST_BET', bet: betValue });
+                }
             } else {
-                sendToPeer({ type: 'GUEST_BET', bet: betValue });
+                if (isHost) {
+                    room.hostSpinClicked = true;
+                    broadcastState();
+                    checkAndTriggerSlots();
+                } else {
+                    sendToPeer({ type: 'GUEST_SPIN_CLICK' });
+                }
             }
-            document.getElementById('casinoActionBtn').innerText = "Ожидание ставок...";
-            document.getElementById('casinoActionBtn').disabled = true;
             updateUI();
         }
 
-        function executeCasinoRoll() {
-            room.hostSlots = [Math.floor(Math.random()*6), Math.floor(Math.random()*6), Math.floor(Math.random()*6)];
-            room.guestSlots = [Math.floor(Math.random()*6), Math.floor(Math.random()*6), Math.floor(Math.random()*6)];
-            
-            sendToPeer({ type: 'SLOTS_ANIMATE', hSlots: room.hostSlots, gSlots: room.guestSlots });
-            animateSlotsLocal(room.hostSlots, room.guestSlots);
+        function checkAndTriggerSlots() {
+            if (room.hostSpinClicked && room.guestSpinClicked) {
+                // ВСЕГДА абсолютно новые и случайные числа
+                room.hostSlots = [Math.floor(Math.random()*6), Math.floor(Math.random()*6), Math.floor(Math.random()*6)];
+                room.guestSlots = [Math.floor(Math.random()*6), Math.floor(Math.random()*6), Math.floor(Math.random()*6)];
+                
+                sendToPeer({ type: 'SLOTS_ANIMATE', hSlots: room.hostSlots, gSlots: room.guestSlots });
+                animateSlotsLocal(room.hostSlots, room.guestSlots);
+            }
         }
 
         function animateSlotsLocal(hSlots, gSlots) {
@@ -759,13 +837,12 @@
             const reelsGuest = document.getElementById('casinoGuestSlots').children;
             
             let start = Date.now();
-            const stopDelays = [1000, 1500, 2000]; // Барабаны останавливаются по очереди
+            const stopDelays = [1000, 1600, 2200];
             
             const interval = setInterval(() => {
                 let now = Date.now();
                 let elapsed = now - start;
                 
-                // Кручение барабанов хоста
                 for (let i = 0; i < 3; i++) {
                     if (elapsed < stopDelays[i]) {
                         reelsHost[i].innerText = slotSymbols[Math.floor(Math.random() * 6)];
@@ -776,7 +853,6 @@
                     }
                 }
                 
-                // Кручение барабанов гостя
                 for (let i = 0; i < 3; i++) {
                     if (elapsed < stopDelays[i]) {
                         reelsGuest[i].innerText = slotSymbols[Math.floor(Math.random() * 6)];
@@ -794,15 +870,14 @@
             }, 50);
         }
 
-        // Подсчёт очков комбинации
         function evaluateSlotsScore(slots) {
             const [a, b, c] = slots;
-            if (a === b && b === c) return 1000 + a * 100; // Три в ряд (самое крутое)
-            if (a === b) return 100 + a * 10 + c;          // Пара
-            if (a === c) return 100 + a * 10 + b;          // Пара
-            if (b === c) return 100 + b * 10 + a;          // Пара
+            if (a === b && b === c) return 1000 + a * 100; 
+            if (a === b) return 100 + a * 10 + c;          
+            if (a === c) return 100 + a * 10 + b;          
+            if (b === c) return 100 + b * 10 + a;          
             const sorted = [...slots].sort((x, y) => y - x);
-            return sorted[0] * 10 + sorted[1];             // Просто старшие символы
+            return sorted[0] * 10 + sorted[1];             
         }
 
         function resolveCasinoBattle(hSlots, gSlots) {
@@ -815,10 +890,10 @@
                 myBalance += isHost ? room.hostBet : room.guestBet;
             } else if (hostScore > guestScore) {
                 if (isHost) { showToast(`Вы выиграли ${totalPool} $!`); myBalance += totalPool; }
-                else { showToast("Хост выиграл!"); }
+                else { showToast(`Хост (${room.hostNick}) победил.`); }
             } else {
                 if (!isHost) { showToast(`Вы выиграли ${totalPool} $!`); myBalance += totalPool; }
-                else { showToast("Игрок выиграл!"); }
+                else { showToast(`Игрок (${room.guestNick}) победил.`); }
             }
             setTimeout(() => { if (isHost) { resetCasinoUi(); broadcastState(); } }, 4000);
         }
